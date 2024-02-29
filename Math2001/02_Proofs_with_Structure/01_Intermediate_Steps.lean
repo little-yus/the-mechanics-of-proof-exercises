@@ -95,8 +95,8 @@ example (x y : ℚ) (h : x * y = 1) (h2 : x ≥ 1) : y ≤ 1 := by
       x * y = 1 := by rw [h]
       _ > 0 := by numbers
   cancel x at h1
-  have h3 : x - 1 ≥ 0 := by addarith [h2]
   calc
-    y ≤ y + y * (x - 1) := by extra
+    y = y + y * (x - x) := by ring
+    _ ≤ y + y * (x - 1) := by rel [h2]
     _ = x * y := by ring
     _ = 1 := by rw [h]
