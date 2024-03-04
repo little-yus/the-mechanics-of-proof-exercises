@@ -95,6 +95,7 @@ example : Even (26 : ℤ) := by
   use 13
   numbers
 
+-- These are easy if you first write out "calc" part, then "use"
 example {m n : ℤ} (hm : Odd m) (hn : Even n) : Odd (n + m) := by
   obtain ⟨a, ha⟩ := hm
   obtain ⟨b, hb⟩ := hn
