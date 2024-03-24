@@ -44,9 +44,16 @@ def x : ℕ → ℤ
 example (n : ℕ) : x n ≡ 1 [ZMOD 4] := by
   simple_induction n with k IH
   · -- base case
-    sorry
+    calc
+      x 0 = 5 := by rw[x]
+      _ = 4 * 1 + 1 := by ring
+      _ ≡ 1 [ZMOD 4] := by extra
   · -- inductive step
-    sorry
+    calc
+      x (k + 1) = 2 * x k - 1 := by rw [x]
+      _ ≡ 2 * 1 - 1 [ZMOD 4] := by rel [IH]
+      _ = 1 := by numbers
+
 
 example (n : ℕ) : x n = 2 ^ (n + 2) + 1 := by
   simple_induction n with k IH
@@ -93,12 +100,32 @@ example (n : ℕ) : ∀ d, 1 ≤ d → d ≤ n → d ∣ n ! := by
     intro d hk1 hk
     obtain hk | hk : d = k + 1 ∨ d < k + 1 := eq_or_lt_of_le hk
     · -- case 1: `d = k + 1`
-      sorry
+      use (k !)
+      calc
+        (k + 1)! = (k + 1) * k ! := by rw [factorial]
+        _ = d * k ! := by rw [hk]
     · -- case 2: `d < k + 1`
-      sorry
+      have h1 : d + 1 ≤ k + 1 := hk
+      have h2 : d ≤ k := by addarith [h1]
+      obtain ⟨x, hx⟩ := IH d hk1 h2
+      use (k + 1) * x
+      calc
+        (k + 1)! = (k + 1) * k ! := by rw [factorial]
+        _ = (k + 1) * (d * x) := by rw [hx]
+        _ = d * ((k + 1) * x) := by ring
 
 example (n : ℕ) : (n + 1)! ≥ 2 ^ n := by
-  sorry
+  simple_induction n with k IH
+  · -- base case
+    dsimp [factorial]
+    numbers
+  · -- inductive step
+    calc
+      (k + 1 + 1) ! = (k + 1 + 1) * (k + 1) ! := by rw [factorial]
+      _ ≥ (k + 1 + 1) * 2 ^ k := by rel [IH]
+      _ = k * 2 ^ k + 2 * 2 ^ k := by ring
+      _ ≥ 2 * 2 ^ k := by extra
+      _ = 2 ^ (k + 1) := by ring
 
 
 /-! # Exercises -/
@@ -109,37 +136,120 @@ def c : ℕ → ℤ
   | n + 1 => 3 * c n - 10
 
 example (n : ℕ) : Odd (c n) := by
-  sorry
+  simple_induction n with k IH
+  · -- base case
+    rw [c]
+    use 3
+    numbers
+  · -- inductive step
+    obtain ⟨x, hx⟩ := IH
+    use 3 * x - 4
+    calc
+      c (k + 1) = 3 * c k - 10 := by rw [c]
+      _ = 3 * (2 * x + 1) - 10 := by rw [hx]
+      _ = 6 * x - 7 := by ring
+      _ = 2 * (3 * x - 4) + 1 := by ring
 
 example (n : ℕ) : c n = 2 * 3 ^ n + 5 := by
-  sorry
+  simple_induction n with k IH
+  · -- base case
+    rw [c]
+    numbers
+  · -- inductive step
+    calc
+      c (k + 1) = 3 * c k - 10 := by rw [c]
+      _ = 3 * (2 * 3 ^ k + 5) - 10 := by rw [IH]
+      _ = 3 * 2 * 3 ^ k + 15 - 10 := by ring
+      _ = 2 * 3 ^ (k + 1) + 5 := by ring
 
 def y : ℕ → ℕ
   | 0 => 2
   | n + 1 => (y n) ^ 2
 
 example (n : ℕ) : y n = 2 ^ (2 ^ n) := by
-  sorry
+  simple_induction n with k IH
+  · -- base case
+    rw [y]
+    numbers
+  · -- inductive step
+    calc
+      y (k + 1) = (y k) ^ 2 := by rw [y]
+      _ = (2 ^ 2 ^ k) ^ 2 := by rw [IH]
+      _ = 2 ^ (2 ^ k * 2) := by ring
+      _ = 2 ^ (2 ^ (k + 1)) := by ring
 
 def B : ℕ → ℚ
   | 0 => 0
   | n + 1 => B n + (n + 1 : ℚ) ^ 2
 
 example (n : ℕ) : B n = n * (n + 1) * (2 * n + 1) / 6 := by
-  sorry
+  simple_induction n with k IH
+  · -- base case
+    rw [B]
+    numbers
+  · -- inductive step
+    calc
+      B (k + 1) = B k + (k + 1) ^ 2 := by rw [B]
+      _ = k * (k + 1) * (2 * k + 1) / 6 + (k + 1) ^ 2 := by rw [IH]
+      _ = (k * (k + 1) * (2 * k + 1) + 6 * (k + 1) ^ 2) / 6 := by ring
+      _ = (k + 1) * (k * (2 * k + 1) + 6 * (k + 1)) / 6 := by ring
+      _ = (k + 1) * (2 * k ^ 2 + k + 6 * k + 6) / 6 := by ring
+      _ = (k + 1) * (2 * k ^ 2 + 7 * k + 6) / 6 := by ring
+      _ = (k + 1) * (k + 2) * (2 * k + 3) / 6 := by ring
+      _ = (k + 1) * (k + 1 + 1) * (2 * (k + 1) + 1) / 6 := by ring
 
 def S : ℕ → ℚ
   | 0 => 1
   | n + 1 => S n + 1 / 2 ^ (n + 1)
 
 example (n : ℕ) : S n = 2 - 1 / 2 ^ n := by
-  sorry
+  simple_induction n with k IH
+  · -- base case
+    rw [S]
+    numbers
+  · -- inductive step
+    calc
+      S (k + 1) = S k + 1 / 2 ^ (k + 1) := by rw [S]
+      _ = 2 - 1 / 2 ^ k + 1 / 2 ^ (k + 1) := by rw [IH]
+      _ = 2 - 1 / 2 ^ k + 1 / (2 ^ k * 2) := by ring
+      _ = 2 - 1 / 2 ^ k * (1 - 1 / 2) := by ring
+      _ = 2 - 1 / 2 ^ k * 1 / 2 := by ring
+      _ = 2 - 1 / (2 ^ k * 2) := by ring
+      _ = 2 - 1 / 2 ^ (k + 1) := by ring
 
 example (n : ℕ) : 0 < n ! := by
-  sorry
+  simple_induction n with k IH
+  · -- base case
+    rw [factorial]
+    numbers
+  · -- inductive step
+    calc
+      (k + 1)! = (k + 1) * k ! := by rw [factorial]
+      _ > (k + 1) * 0 := by rel [IH]
+      _ = 0 := by ring
 
 example {n : ℕ} (hn : 2 ≤ n) : Nat.Even (n !) := by
-  sorry
+  induction_from_starting_point n, hn with k hk IH
+  · -- base case
+    use 1
+    dsimp [factorial]
+  · -- inductive step
+    obtain ⟨x, hx⟩ := IH
+    use (k + 1) * x
+    calc
+      (k + 1)! = (k + 1) * k ! := by rw [factorial]
+      _ = (k + 1) * (2 * x) := by rw [hx]
+      _ = 2 * ((k + 1) * x) := by ring
 
 example (n : ℕ) : (n + 1) ! ≤ (n + 1) ^ n := by
-  sorry
+  simple_induction n with k IH
+  · -- base case
+    dsimp [factorial]
+    numbers
+  · -- inductive step
+    have h : k + 1 < k + 1 + 1 := by extra
+    calc
+      (k + 1 + 1)! = (k + 1 + 1) * (k + 1)! := by rw [factorial]
+      _ ≤ (k + 1 + 1) * (k + 1) ^ k := by rel [IH]
+      _ ≤ (k + 1 + 1) * (k + 1 + 1) ^ k := by rel [h]
+      _ = (k + 1 + 1) ^ (k + 1) := by ring
