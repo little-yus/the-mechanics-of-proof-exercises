@@ -107,7 +107,26 @@ example (a b : ℤ) (h : 0 < b) : ∃ r : ℤ, 0 ≤ r ∧ r < b ∧ a ≡ r [ZM
 
 
 theorem lt_fmod_of_neg (n : ℤ) {d : ℤ} (hd : d < 0) : d < fmod n d := by
-  sorry
+  rw [fmod]
+  split_ifs with h1 h2 h3 <;> push_neg at *
+  · -- case `n * d < 0`
+    have IH := lt_fmod_of_neg (n + d) hd -- inductive hypothesis
+    apply IH
+  · -- case `0 < d * (n - d)`
+    have IH := lt_fmod_of_neg (n - d) hd -- inductive hypothesis
+    apply IH
+  · -- case `n = d`
+    apply hd
+  · -- last case
+    have hd0 : 0 < -d := by addarith [hd]
+    have h : -d * (n - d) ≥ 0 := by addarith [h2]
+    cancel -d at h
+    have h : d ≤ n := by addarith [h]
+    apply lt_of_le_of_ne
+    · apply h
+    · apply Ne.symm -- using lemmas not mentioned in the book feels like cheating
+      apply h3
+termination_by _ n d hd => 2 * n - d
 
 def T (n : ℤ) : ℤ :=
   if 0 < n then
@@ -119,12 +138,95 @@ def T (n : ℤ) : ℤ :=
 termination_by T n => 3 * n - 1
 
 theorem T_eq (n : ℤ) : T n = n ^ 2 := by
-  sorry
+  rw [T]
+  split_ifs with h1 h2 <;> push_neg at *
+  · have IH := T_eq (1 - n)
+    calc
+      T (1 - n) + 2 * n - 1 = (1 - n) ^ 2 + 2 * n - 1 := by rw [IH]
+      _ = n ^ 2 := by ring
+  · have IH := T_eq (-n)
+    calc
+      T (-n) = (-n) ^ 2 := by rw [IH]
+      _ = n ^ 2 := by ring
+  · have h2 : 0 ≤ n := by addarith [h2]
+    have hn0 : n = 0
+    apply le_antisymm
+    · apply h1
+    · apply h2
+    rw [hn0]
+    numbers
+termination_by _ n => 3 * n - 1 -- I don't like that this thing is not explained properly
 
 theorem uniqueness (a b : ℤ) (h : 0 < b) {r s : ℤ}
     (hr : 0 ≤ r ∧ r < b ∧ a ≡ r [ZMOD b])
     (hs : 0 ≤ s ∧ s < b ∧ a ≡ s [ZMOD b]) : r = s := by
-  sorry
+  obtain ⟨h1, h2, k, hk⟩ := hr
+  obtain ⟨h3, h4, m, hm⟩ := hs
+  have hk : r = a - b * k := by addarith [hk]
+  have hm : s = a - b * m := by addarith [hm]
+  have hrs :=
+  calc
+    r - s = (a - b * k) - (a - b * m) := by rw [hk, hm]
+    _ = b * (m - k) := by ring
+  obtain hz | hz := lt_or_ge (r - s) 0
+  · have hz : s - r > 0 := by addarith [hz]
+    have hrs : s - r = b * (k - m) :=
+    calc
+      s - r = - (r - s) := by ring
+      _ = - (b * (m - k)) := by rw [hrs]
+      _ = b * (k - m) := by ring
+    have hb : b ∣ (s - r)
+    · use (k - m)
+      apply hrs
+    have hb := Int.le_of_dvd hz hb
+    have h5 : s - r < b - r := by addarith [h4]
+    have hb1 :=
+      calc
+        b ≤ s - r := by rel [hb]
+        _ < b - r := by rel [h5]
+    have hr0 : r < 0 := by addarith [hb1]
+    have hr0_contr : ¬ (r < 0) := not_lt_of_ge h1
+    contradiction -- hr0 and hr0_contr
+  obtain hz1 | hz1 := lt_or_ge 0 (r - s)
+  · have hb : b ∣ (r - s)
+    · use (m - k)
+      apply hrs
+    have hb := Int.le_of_dvd hz1 hb
+    have h5 : r - s < b - s := by addarith [h2]
+    have hb1 :=
+      calc
+        b ≤ r - s := by rel [hb]
+        _ < b - s := by rel [h5] -- by rel [h2] didn't work
+    have hs0 : s < 0 := by addarith [hb1]
+    have hs0_contr : ¬ (s < 0) := not_lt_of_ge h3
+    contradiction -- hs0 and hs_contr
+  · apply le_antisymm
+    · addarith [hz1]
+    · addarith [hz]
 
 example (a b : ℤ) (h : 0 < b) : ∃! r : ℤ, 0 ≤ r ∧ r < b ∧ a ≡ r [ZMOD b] := by
-  sorry
+  use fmod a b
+  dsimp
+  constructor
+  · constructor
+    · apply fmod_nonneg_of_pos
+      apply h
+    · constructor
+      · apply fmod_lt_of_pos
+        apply h
+      · use fdiv a b
+        have Hab : fmod a b + b * fdiv a b = a := fmod_add_fdiv a b
+        addarith [Hab]
+  · intro y hy
+    apply uniqueness
+    · apply h
+    · apply hy
+    · constructor
+      · apply fmod_nonneg_of_pos
+        apply h
+      · constructor
+        · apply fmod_lt_of_pos
+          apply h
+        · use fdiv a b
+          have Hab : fmod a b + b * fdiv a b = a := fmod_add_fdiv a b
+          addarith [Hab]
