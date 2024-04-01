@@ -69,29 +69,52 @@ theorem gcd_dvd (a b : ℤ) : gcd a b ∣ b ∧ gcd a b ∣ a := by
     obtain ⟨IH_right, IH_left⟩ := IH
     constructor
     · -- prove that `gcd a b ∣ b`
-      sorry
+      apply IH_left
     · -- prove that `gcd a b ∣ a`
-      sorry
+      obtain ⟨k, hk⟩ := IH_left
+      obtain ⟨l, hl⟩ := IH_right
+      have h := fmod_add_fdiv a b
+      use l + k * fdiv a b
+      calc
+        a = fmod a b + b * fdiv a b := by addarith [h]
+        _ = (gcd b (fmod a b) * l) + (gcd b (fmod a b) * k) * fdiv a b := by rw [← hl, ← hk] -- ← is introduced later in this exercise
+        _ = gcd b (fmod a b) * (l + k * fdiv a b) := by ring
   · -- case `b < 0`
     have IH : _ ∧ _ := gcd_dvd b (fmod a (-b)) -- inductive hypothesis
     obtain ⟨IH_right, IH_left⟩ := IH
     constructor
     · -- prove that `gcd a b ∣ b`
-      sorry
+      apply IH_left
     · -- prove that `gcd a b ∣ a`
-      sorry
+      obtain ⟨k, hk⟩ := IH_left
+      obtain ⟨l, hl⟩ := IH_right
+      have h := fmod_add_fdiv a (-b)
+      use l - k * fdiv a (-b)
+      calc
+        a = fmod a (-b) + -b * fdiv a (-b) := by addarith [h]
+        _ = (gcd b (fmod a (-b)) * l) + -(gcd b (fmod a (-b)) * k) * fdiv a (-b) := by rw [← hl, ← hk]
+        _ = gcd b (fmod a (-b)) * l - gcd b (fmod a (-b)) * k * fdiv a (-b) := by ring
+        _ = gcd b (fmod a (-b)) * (l - k * fdiv a (-b)) := by ring
   · -- case `b = 0`, `0 ≤ a`
     constructor
     · -- prove that `gcd a b ∣ b`
-      sorry
+      have hb : b = 0 := le_antisymm h1 h2
+      use 0
+      rw [hb]
+      ring
     · -- prove that `gcd a b ∣ a`
-      sorry
+      use 1
+      ring
   · -- case `b = 0`, `a < 0`
     constructor
     · -- prove that `gcd a b ∣ b`
-      sorry
+      have hb : b = 0 := le_antisymm h1 h2
+      use 0
+      rw [hb]
+      ring
     · -- prove that `gcd a b ∣ a`
-      sorry
+      use -1
+      ring
 termination_by gcd_dvd a b => b
 
 
@@ -221,4 +244,11 @@ theorem bezout (a b : ℤ) : ∃ x y : ℤ, x * a + y * b = gcd a b := by
 
 
 theorem gcd_maximal {d a b : ℤ} (ha : d ∣ a) (hb : d ∣ b) : d ∣ gcd a b := by
-  sorry
+  obtain ⟨k, hk⟩ := ha
+  obtain ⟨l, hl⟩ := hb
+  obtain ⟨x, y, hxy⟩ := bezout a b
+  use x * k + y * l
+  calc
+    gcd a b = x * a + y * b := by rw [hxy]
+    _ = x * (d * k) + y * (d * l) := by rw [hk, hl]
+    _ = d * (x * k + y * l) := by ring
