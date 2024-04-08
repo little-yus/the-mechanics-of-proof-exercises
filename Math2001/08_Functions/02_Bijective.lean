@@ -127,8 +127,19 @@ example : ∀ f : Celestial → Celestial, Injective f → Bijective f := by
       apply h_sun
     · use moon
       apply h_moon
-  | moon, sun => sorry
-  | moon, moon => sorry
+  | moon, sun =>
+    intro y
+    cases y
+    · use moon
+      apply h_moon
+    · use sun
+      apply h_sun
+  | moon, moon =>
+    have : sun = moon
+    · apply hf
+      rw [h_sun, h_moon]
+    contradiction
+
 
 
 example : ¬ ∀ f : ℕ → ℕ, Injective f → Bijective f := by
@@ -153,19 +164,40 @@ example : ¬ ∀ f : ℕ → ℕ, Injective f → Bijective f := by
 /-! # Exercises -/
 
 
+-- Exercise 1
 example : Bijective (fun (x : ℝ) ↦ 4 - 3 * x) := by
-  sorry
+  constructor
+  · intro x1 x2 hf
+    dsimp at hf
+    have h : 3 * x1 = 3 * x2 := by addarith [hf]
+    cancel 3 at h
+  · intro y
+    use (4 - y) / 3
+    dsimp
+    ring
 
-example : ¬ Bijective (fun (x : ℝ) ↦ 4 - 3 * x) := by
-  sorry
+-- This one is wrong
+-- example : ¬ Bijective (fun (x : ℝ) ↦ 4 - 3 * x) := by
+--   sorry
 
 
-example : Bijective (fun (x : ℝ) ↦ x ^ 2 + 2 * x) := by
-  sorry
+-- Exercise 2
+-- This one is wrong
+-- example : Bijective (fun (x : ℝ) ↦ x ^ 2 + 2 * x) := by
+--   sorry
 
 example : ¬ Bijective (fun (x : ℝ) ↦ x ^ 2 + 2 * x) := by
-  sorry
+  dsimp [Bijective]
+  push_neg
+  left
+  dsimp [Injective]
+  push_neg
+  use 0, -2
+  constructor
+  · numbers
+  · numbers
 
+-- Exercise 3
 inductive Element
   | fire
   | water
@@ -182,15 +214,428 @@ def e : Element → Element
   | air => water
 
 example : Bijective e := by
-  sorry
+  constructor
+  · intro x1 x2 hx
+    cases x1 <;> cases x2 <;> exhaust
+  · intro y
+    cases y
+    · use earth
+      dsimp [e]
+    · use air
+      dsimp [e]
+    · use fire
+      dsimp [e]
+    · use water
+      dsimp [e]
 
-example : ¬ Bijective e := by
-  sorry
+-- This one is wrong
+-- example : ¬ Bijective e := by
+--   sorry
 
 
+-- Exercise 4
+-- There are 3 ^ 3 = 27 cases to check
 example : ∀ f : Subatomic → Subatomic, Injective f → Bijective f := by
-  sorry
+  intro f f_inj
+  constructor
+  · apply f_inj
+  · intro y
+    dsimp [Injective] at f_inj
+    match h_pt : f proton, h_nt : f neutron, h_el : f electron with
+    | proton, neutron, electron =>
+      cases y
+      · use proton
+        apply h_pt
+      · use neutron
+        apply h_nt
+      · use electron
+        apply h_el
+    | proton, electron, neutron =>
+      cases y
+      · use proton
+        apply h_pt
+      · use electron
+        apply h_el
+      · use neutron
+        apply h_nt
+    | neutron, proton, electron =>
+      cases y
+      · use neutron
+        apply h_nt
+      · use proton
+        apply h_pt
+      · use electron
+        apply h_el
+    | neutron, electron, proton =>
+      cases y
+      · use electron
+        apply h_el
+      · use proton
+        apply h_pt
+      · use neutron
+        apply h_nt
+    | electron, proton, neutron =>
+      cases y
+      · use neutron
+        apply h_nt
+      · use electron
+        apply h_el
+      · use proton
+        apply h_pt
+    | electron, neutron, proton =>
+      cases y
+      · use electron
+        apply h_el
+      · use neutron
+        apply h_nt
+      · use proton
+        apply h_pt
 
+    | electron, electron, _
+    | proton, proton, _
+    | neutron, neutron, _ =>
+      have h : proton = neutron
+      · apply f_inj
+        rw [h_pt, h_nt]
+      contradiction
+    | electron, _, electron
+    | proton, _, proton
+    | neutron, _, neutron =>
+      have h : proton = electron
+      · apply f_inj
+        rw [h_pt, h_el]
+      contradiction
+    | _, electron, electron
+    | _, proton, proton
+    | _, neutron, neutron =>
+      have h : neutron = electron
+      · apply f_inj
+        rw [h_nt, h_el]
+      contradiction
 
+-- Exercise 5
+-- 4 ^ 4 = 64 cases
 example : ∀ f : Element → Element, Injective f → Bijective f := by
-  sorry
+  intro f f_inj
+  constructor
+  · apply f_inj
+  · dsimp [Injective] at f_inj
+    match hf : f fire, hw : f water, he : f earth, ha : f air with
+    | fire, water, earth, air =>
+      intro y
+      cases y
+      · use fire
+        apply hf
+      · use water
+        apply hw
+      · use earth
+        apply he
+      · use air
+        apply ha
+    | fire, water, air, earth =>
+      intro y
+      cases y
+      · use fire
+        apply hf
+      · use water
+        apply hw
+      · use air
+        apply ha
+      · use earth
+        apply he
+    | fire, earth, water, air =>
+      intro y
+      cases y
+      · use fire
+        apply hf
+      · use earth
+        apply he
+      · use water
+        apply hw
+      · use air
+        apply ha
+    | fire, earth, air, water =>
+      intro y
+      cases y
+      · use fire
+        apply hf
+      · use air
+        apply ha
+      · use water
+        apply hw
+      · use earth
+        apply he
+    | fire, air, water, earth =>
+      intro y
+      cases y
+      · use fire
+        apply hf
+      · use earth
+        apply he
+      · use air
+        apply ha
+      · use water
+        apply hw
+    | fire, air, earth, water =>
+      intro y
+      cases y
+      · use fire
+        apply hf
+      · use air
+        apply ha
+      · use earth
+        apply he
+      · use water
+        apply hw
+
+    | water, fire, earth, air =>
+      intro y
+      cases y
+      · use water
+        apply hw
+      · use fire
+        apply hf
+      · use earth
+        apply he
+      · use air
+        apply ha
+    | water, fire, air, earth =>
+      intro y
+      cases y
+      · use water
+        apply hw
+      · use fire
+        apply hf
+      · use air
+        apply ha
+      · use earth
+        apply he
+    | water, earth, fire, air =>
+      intro y
+      cases y
+      · use earth
+        apply he
+      · use fire
+        apply hf
+      · use water
+        apply hw
+      · use air
+        apply ha
+    | water, earth, air, fire =>
+      intro y
+      cases y
+      · use air
+        apply ha
+      · use fire
+        apply hf
+      · use water
+        apply hw
+      · use earth
+        apply he
+    | water, air, fire, earth =>
+      intro y
+      cases y
+      · use earth
+        apply he
+      · use fire
+        apply hf
+      · use air
+        apply ha
+      · use water
+        apply hw
+    | water, air, earth, fire =>
+      intro y
+      cases y
+      · use air
+        apply ha
+      · use fire
+        apply hf
+      · use earth
+        apply he
+      · use water
+        apply hw
+
+    | earth, fire, water, air =>
+      intro y
+      cases y
+      · use water
+        apply hw
+      · use earth
+        apply he
+      · use fire
+        apply hf
+      · use air
+        apply ha
+    | earth, fire, air, water =>
+      intro y
+      cases y
+      · use water
+        apply hw
+      · use air
+        apply ha
+      · use fire
+        apply hf
+      · use earth
+        apply he
+    | earth, water, fire, air =>
+      intro y
+      cases y
+      · use earth
+        apply he
+      · use water
+        apply hw
+      · use fire
+        apply hf
+      · use air
+        apply ha
+    | earth, water, air, fire =>
+      intro y
+      cases y
+      · use air
+        apply ha
+      · use water
+        apply hw
+      · use fire
+        apply hf
+      · use earth
+        apply he
+    | earth, air, fire, water =>
+      intro y
+      cases y
+      · use earth
+        apply he
+      · use air
+        apply ha
+      · use fire
+        apply hf
+      · use water
+        apply hw
+    | earth, air, water, fire =>
+      intro y
+      cases y
+      · use air
+        apply ha
+      · use earth
+        apply he
+      · use fire
+        apply hf
+      · use water
+        apply hw
+
+    | air, fire, water, earth =>
+      intro y
+      cases y
+      · use water
+        apply hw
+      · use earth
+        apply he
+      · use air
+        apply ha
+      · use fire
+        apply hf
+    | air, fire, earth, water =>
+      intro y
+      cases y
+      · use water
+        apply hw
+      · use air
+        apply ha
+      · use earth
+        apply he
+      · use fire
+        apply hf
+    | air, water, fire, earth =>
+      intro y
+      cases y
+      · use earth
+        apply he
+      · use water
+        apply hw
+      · use air
+        apply ha
+      · use fire
+        apply hf
+    | air, water, earth, fire =>
+      intro y
+      cases y
+      · use air
+        apply ha
+      · use water
+        apply hw
+      · use earth
+        apply he
+      · use fire
+        apply hf
+    | air, earth, fire, water =>
+      intro y
+      cases y
+      · use earth
+        apply he
+      · use air
+        apply ha
+      · use water
+        apply hw
+      · use fire
+        apply hf
+    | air, earth, water, fire =>
+      intro y
+      cases y
+      · use air
+        apply ha
+      · use earth
+        apply he
+      · use water
+        apply hw
+      · use fire
+        apply hf
+
+    | fire, fire, _, _
+    | water, water, _, _
+    | earth, earth, _, _
+    | air, air, _, _ =>
+      have h : fire = water
+      · apply f_inj
+        rw [hf, hw]
+      contradiction
+    | fire, _, fire, _
+    | water, _, water, _
+    | earth, _, earth, _
+    | air, _, air, _ =>
+      have h : fire = earth
+      · apply f_inj
+        rw [hf, he]
+      contradiction
+    | fire, _, _, fire
+    | water, _, _, water
+    | earth, _, _, earth
+    | air, _, _, air =>
+      have h : fire = air
+      · apply f_inj
+        rw [hf, ha]
+      contradiction
+    | _, fire, fire, _
+    | _, water, water, _
+    | _, earth, earth, _
+    | _, air, air, _ =>
+      have h : water = earth
+      · apply f_inj
+        rw [hw, he]
+      contradiction
+    | _, fire, _, fire
+    | _, water, _, water
+    | _, earth, _, earth
+    | _, air, _, air =>
+      have h : water = air
+      · apply f_inj
+        rw [hw, ha]
+      contradiction
+    | _, _, fire, fire
+    | _, _, water, water
+    | _, _, earth, earth
+    | _, _, air, air =>
+      have h : earth = air
+      · apply f_inj
+        rw [he, ha]
+      contradiction
+
+-- That was tedious, i hope i didn't miss some way to automate it
