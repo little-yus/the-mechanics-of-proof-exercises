@@ -131,10 +131,10 @@ def b : Humour → Humour
   | sanguine => sanguine
 
 def c : Humour → Humour
-  | melancholic => sorry
-  | choleric => sorry
-  | phlegmatic => sorry
-  | sanguine => sorry
+  | melancholic => sanguine
+  | choleric => phlegmatic
+  | phlegmatic => melancholic
+  | sanguine => phlegmatic
 
 example : b ∘ a = c := by
   ext x
@@ -143,25 +143,69 @@ example : b ∘ a = c := by
 
 def u (x : ℝ) : ℝ := 5 * x + 1
 
-noncomputable def v (x : ℝ) : ℝ := sorry
+noncomputable def v (x : ℝ) : ℝ := (x - 1) / 5
 
 example : Inverse u v := by
-  sorry
+  dsimp [Inverse]
+  constructor
+  · ext x
+    calc
+      (v ∘ u) x = v (u x) := by rfl
+      _ = ((u x) - 1) / 5 := by rfl
+      _ = ((5 * x + 1) - 1) / 5 := by rfl
+      _ = x := by ring
+      _ = id x := by rfl
+  · ext x
+    calc
+      (u ∘ v) x = u (v x) := by rfl
+      _ = 5 * (v x) + 1 := by rfl
+      _ = 5 * ((x - 1) / 5) + 1 := by rfl
+      _ = x := by ring
+      _ = id x := by rfl
 
 example {f : X → Y} (hf : Injective f) {g : Y → Z} (hg : Injective g) :
     Injective (g ∘ f) := by
-  sorry
+  intro x1 x2 hgf
+  apply hf
+  apply hg
+  apply hgf
 
 example {f : X → Y} (hf : Surjective f) {g : Y → Z} (hg : Surjective g) :
     Surjective (g ∘ f) := by
-  sorry
+  intro z
+  obtain ⟨y, hy⟩ := hg z
+  obtain ⟨x, hx⟩ := hf y
+  use x
+  calc
+    (g ∘ f) x = g (f x) := by rfl
+    _ = g y := by rw [hx]
+    _ = z := by rw [hy]
 
 example {f : X → Y} (hf : Surjective f) : ∃ g : Y → X, f ∘ g = id := by
-  sorry
+  dsimp [Surjective] at hf
+  choose g hg using hf
+  use g
+  ext y
+  calc
+    (f ∘ g) y = f (g y) := by rfl
+    _ = y := hg y
+    _ = id y := by rfl
 
 example {f : X → Y} {g : Y → X} (h : Inverse f g) : Inverse g f := by
-  sorry
+  obtain ⟨h1, h2⟩ := h
+  constructor
+  · apply h2
+  · apply h1
 
 example {f : X → Y} {g1 g2 : Y → X} (h1 : Inverse f g1) (h2 : Inverse f g2) :
     g1 = g2 := by
-  sorry
+  obtain ⟨hg1f, _⟩ := h1
+  obtain ⟨_, hfg2⟩ := h2
+  ext x
+  calc
+    g1 x = g1 (id x) := by rfl
+    _ = g1 ((f ∘ g2) x) := by rw [hfg2]
+    _ = g1 (f (g2 x)) := by rfl
+    _ = (g1 ∘ f) (g2 x) := by rfl
+    _ = id (g2 x) := by rw [hg1f]
+    _ = g2 x := by rfl
