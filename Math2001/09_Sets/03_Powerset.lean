@@ -16,6 +16,9 @@ open Set Function
 #check {s : Set ℕ | 3 ∈ s} -- `{s | 3 ∈ s} : Set (Set ℕ)`
 
 
+-- Exercise: write down an object of type Set (Set (Set ℕ))
+#check {{{1, 2}, {3, 4}}, {{5}}, {{6, 7, 8}, {10, 11}}}
+
 
 example : {n : ℕ | Nat.Even n} ∉ {s : Set ℕ | 3 ∈ s} := by
   dsimp
@@ -79,7 +82,18 @@ example : ¬ ∃ f : X → Set X, Surjective f := by
 def r (s : Set ℕ) : Set ℕ := s ∪ {3}
 
 example : ¬ Injective r := by
-  sorry
+  dsimp [Injective, r]
+  push_neg
+  use ∅, {3}
+  constructor
+  · ext x
+    dsimp
+    exhaust
+  · ext
+    push_neg
+    use 3
+    dsimp
+    exhaust
 
 namespace Int
 
@@ -90,8 +104,33 @@ def U : ℕ → Set ℤ
 example (n : ℕ) : U n = {x : ℤ | (2:ℤ) ^ n ∣ x} := by
   simple_induction n with k hk
   · rw [U]
-    sorry
+    ext x
+    dsimp
+    suffices (2 ^ 0 ∣ x) by exhaust
+    · use x
+      ring
   · rw [U]
     ext x
     dsimp
-    sorry
+    constructor
+    · intro h
+      obtain ⟨y, ⟨hy, hx⟩⟩ := h
+      rw [hk] at hy
+      dsimp at hy
+      obtain ⟨m, hm⟩ := hy
+      use m
+      calc
+        x = 2 * y := by rw [hx]
+        _ = 2 * (2 ^ k * m) := by rw [hm]
+        _ = 2 ^ (k + 1) * m := by ring
+    · intro hx
+      obtain ⟨m, hm⟩ := hx
+      use 2 ^ k * m
+      constructor
+      · rw [hk]
+        dsimp
+        use m
+        ring
+      · calc
+          x = 2 ^ (k + 1) * m := by rw [hm]
+          _ = 2 * (2 ^ k * m) := by ring
