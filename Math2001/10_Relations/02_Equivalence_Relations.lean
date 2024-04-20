@@ -168,13 +168,46 @@ section
 local infix:50 "∼" => fun (a b : ℤ) ↦ ∃ m n, m > 0 ∧ n > 0 ∧ a * m = b * n
 
 example : Reflexive (· ∼ ·) := by
-  sorry
+  dsimp [Reflexive]
+  intro x
+  use 1, 1
+  constructor
+  · numbers
+  · constructor
+    · numbers
+    · ring
 
 example : Symmetric (· ∼ ·) := by
-  sorry
+  dsimp [Symmetric]
+  intro x y ⟨m, n, hm0, hn0, hmn⟩
+  use n, m
+  constructor
+  · apply hn0
+  · constructor
+    · apply hm0
+    · rw [hmn]
 
 example : Transitive (· ∼ ·) := by
-  sorry
+  dsimp [Transitive]
+  intro x y z hxy hyz
+  obtain ⟨m, n, hm0, hn0, hmn⟩ := hxy
+  obtain ⟨k, l, hk0, hl0, hkl⟩ := hyz
+  use m * k, l * n
+  constructor
+  · calc
+      m * k > 0 * k := by rel [hm0]
+      _ = 0 := by ring
+  · constructor
+    · calc
+        l * n > 0 * n := by rel [hl0]
+        _ = 0 := by ring
+    · calc
+        x * (m * k)
+          = (x * m) * k := by ring
+        _ = (y * n) * k := by rw [hmn]
+        _ = (y * k) * n := by ring
+        _ = (z * l) * n := by rw [hkl]
+        _ = z * (l * n) := by ring
 
 end
 
@@ -183,13 +216,27 @@ section
 local infix:50 "∼" => fun ((a, b) : ℕ × ℕ) (c, d) ↦ a + d = b + c
 
 example : Reflexive (· ∼ ·) := by
-  sorry
+  dsimp [Reflexive]
+  intro p
+  ring
 
 example : Symmetric (· ∼ ·) := by
-  sorry
+  dsimp [Symmetric]
+  intro a b h
+  calc
+    b.1 + a.2 = a.2 + b.1 := by ring
+    _ = a.1 + b.2 := by rw [h]
+    _ = b.2 + a.1 := by ring
 
 example : Transitive (· ∼ ·) := by
-  sorry
+  dsimp [Transitive]
+  intro a b c hab hbc
+  have h := calc
+    a.1 + c.2 + (b.1 + b.2)
+      = (a.1 + b.2) + (b.1 + c.2) := by ring
+    _ = (a.2 + b.1) + (b.2 + c.1) := by rw [hab, hbc]
+    _ = a.2 + c.1 + (b.1 + b.2) := by ring
+  addarith [h]
 
 end
 
@@ -199,12 +246,46 @@ local infix:50 "∼" => fun ((a, b) : ℤ × ℤ) (c, d) ↦
   ∃ m n, m > 0 ∧ n > 0 ∧ m * b * (b ^ 2 - 3 * a ^ 2) = n * d * (d ^ 2 - 3 * c ^ 2)
 
 example : Reflexive (· ∼ ·) := by
-  sorry
+  dsimp [Reflexive]
+  intro a
+  use 1, 1
+  constructor
+  · numbers
+  · constructor
+    · numbers
+    · ring
 
 example : Symmetric (· ∼ ·) := by
-  sorry
+  dsimp [Symmetric]
+  intro a b hmn
+  obtain ⟨m, n, hm0, hn0, hmn⟩ := hmn
+  use n, m
+  constructor
+  · apply hn0
+  · constructor
+    · apply hm0
+    · rw [hmn]
 
 example : Transitive (· ∼ ·) := by
-  sorry
+  dsimp [Transitive]
+  intro a b c hab hbc
+  obtain ⟨m, n, hm0, hn0, hmn⟩ := hab
+  obtain ⟨k, l, hk0, hl0, hkl⟩ := hbc
+  use k * m, n * l
+  constructor
+  · calc
+      k * m > 0 * m := by rel [hk0]
+      _ = 0 := by ring
+  · constructor
+    · calc
+        n * l > 0 * l := by rel [hn0]
+        _ = 0 := by ring
+    · calc
+        k * m * a.2 * (a.2 ^ 2 - 3 * a.1 ^ 2)
+          = k * (m * a.2 * (a.2 ^ 2 - 3 * a.1 ^ 2)) := by ring
+        _ = k * (n * b.2 * (b.2 ^ 2 - 3 * b.1 ^ 2)) := by rw [hmn]
+        _ = n * (k * b.2 * (b.2 ^ 2 - 3 * b.1 ^ 2)) := by ring
+        _ = n * (l * c.2 * (c.2 ^ 2 - 3 * c.1 ^ 2)) := by rw [hkl]
+        _ = n * l * c.2 * (c.2 ^ 2 - 3 * c.1 ^ 2) := by ring
 
 end
